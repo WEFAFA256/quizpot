@@ -3,8 +3,8 @@ import { useState } from 'react'
 
 export default function LandingScreen({ onJoin, onLogin }) {
   const [dummyPools] = useState([
-    { name: 'GOLD VIP', stake: 10000, pot: '15.5M', color: '#F5C842' },
-    { name: 'SILVER', stake: 1000, pot: '850K', color: '#C0C0C0' },
+    { name: 'GOLD VIP', stake: 1000, pot: '1.2M', color: '#F5C842' },
+    { name: 'SILVER', stake: 500, pot: '450K', color: '#C0C0C0' },
   ])
 
   return (
@@ -27,8 +27,8 @@ export default function LandingScreen({ onJoin, onLogin }) {
         </div>
 
         <div style={styles.actions}>
-          <button onClick={onJoin} style={styles.signUpBtn}>GET STARTED</button>
-          <button onClick={onLogin} style={styles.loginBtn}>LOGIN TO ACCOUNT</button>
+          <button onClick={onJoin} style={styles.signUpBtn}>JOIN GAME</button>
+          <button onClick={onLogin} style={styles.loginBtn}>LOGIN</button>
         </div>
       </div>
     </div>
@@ -47,7 +47,7 @@ const styles = {
   heroTitle: { fontSize: 64, fontWeight: 900, fontFamily: 'var(--font-display)', letterSpacing: 4, textShadow: '0 0 30px rgba(255,255,255,0.1)' },
   heroSub: { fontSize: 15, color: 'var(--text-dim)', maxWidth: '280px', margin: '12px auto 0', lineHeight: 1.5 },
 
-  actions: { display: 'flex', flexDirection: 'column', gap: 12 },
-  signUpBtn: { padding: '20px', background: 'var(--gold)', color: '#000', border: 'none', borderRadius: 24, fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 900, letterSpacing: 1, cursor: 'pointer', boxShadow: '0 10px 30px rgba(245,200,66,0.2)' },
-  loginBtn: { padding: '18px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }
+  actions: { display: 'flex', gap: 12 },
+  signUpBtn: { flex: 1.5, padding: '16px', background: 'var(--gold)', color: '#000', border: 'none', borderRadius: 16, fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, cursor: 'pointer', boxShadow: '0 10px 30px rgba(245,200,66,0.2)' },
+  loginBtn: { flex: 1, padding: '16px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }
 }

@@ -50,7 +50,7 @@ export default function BackgroundSound() {
 }
 
 const styles = {
-  btn: { position: 'fixed', top: 24, right: 24, zIndex: 1000, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(10px)' },
+  btn: { position: 'fixed', bottom: 24, right: 24, zIndex: 1000, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(10px)' },
   barContainer: { display: 'flex', alignItems: 'center', gap: 2, height: 16 },
   bar: { width: 3, background: 'var(--gold)', borderRadius: 2 }
 }

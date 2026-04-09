@@ -9,6 +9,7 @@ import LobbyScreen from '../components/LobbyScreen'
 import GameScreen from '../components/GameScreen'
 import { EliminatedScreen, WinnerScreen } from '../components/EndScreens'
 import BackgroundSound from '../components/BackgroundSound'
+import GameBot from '../components/GameBot'
 import { QUESTIONS, GAME_CONFIG } from '../lib/data'
 
 const SCREENS = {
@@ -37,6 +38,7 @@ export default function Home() {
   const [eliminatedRound, setEliminatedRound] = useState(0)
   const [confettiActive, setConfettiActive] = useState(false)
   const [userWinAmount, setUserWinAmount] = useState(null)
+  const [payMethod, setPayMethod] = useState(null)
 
   // Initial Splash
   useEffect(() => {
@@ -62,9 +64,15 @@ export default function Home() {
     setScreen(SCREENS.DASHBOARD)
   }
 
-  const handleDeposit = (amount) => {
+  const handleLogout = () => {
+    setUser(null)
+    setScreen(SCREENS.LANDING)
+  }
+
+  const handleDeposit = (amount, method) => {
     setBalance(b => b + amount)
-    setHistory([{ type: 'Account Deposit', amount, date: new Date().toLocaleDateString() }, ...history])
+    setPayMethod(method)
+    setHistory([{ type: `Deposit via ${method.toUpperCase()}`, amount, date: new Date().toLocaleDateString() }, ...history])
     setScreen(SCREENS.DASHBOARD)
   }
 
@@ -88,7 +96,7 @@ export default function Home() {
   const handleCorrect = (eliminated) => {
     setPlayers(p => Math.max(1, p - eliminated))
     if (currentRound >= QUESTIONS.length) {
-      handleWin(currentStake * 5) // Fixed 5x for win
+      handleWin(currentStake * 5)
     } else {
       setCurrentRound(r => r + 1)
     }
@@ -122,8 +130,9 @@ export default function Home() {
       <ParticleBackground />
       <Confetti active={confettiActive} />
       <BackgroundSound />
+      <GameBot />
 
-      {/* Header UI (Fixed Overlap) */}
+      {/* Header UI (Compact & Integrated) */}
       {screen !== SCREENS.SPLASH && screen !== SCREENS.GAME && (
         <div style={styles.header}>
           <div style={styles.logoBlock}>
@@ -132,7 +141,7 @@ export default function Home() {
           </div>
           {user && (
             <div style={styles.userBadge}>
-               {user.username} • {balance.toLocaleString()} UGX
+               {balance.toLocaleString()} UGX
             </div>
           )}
         </div>
@@ -160,7 +169,13 @@ export default function Home() {
         )}
 
         {screen === SCREENS.DASHBOARD && (
-          <Dashboard balance={balance} history={history} onDeposit={() => setScreen(SCREENS.DEPOSIT)} onEnterPool={handleEnterPool} />
+          <Dashboard 
+            balance={balance} 
+            history={history} 
+            onDeposit={() => setScreen(SCREENS.DEPOSIT)} 
+            onEnterPool={handleEnterPool} 
+            onLogout={handleLogout}
+          />
         )}
 
         {screen === SCREENS.DEPOSIT && (
@@ -201,7 +216,7 @@ const styles = {
   logoBlock: { display: 'flex', alignItems: 'center', gap: 10 },
   logo: { width: 40, height: 40, borderRadius: 10, boxShadow: '0 4px 10px rgba(0,0,0,0.3)' },
   logoText: { fontSize: 18, fontWeight: 900, fontFamily: 'var(--font-display)', letterSpacing: 0.5 },
-  userBadge: { background: 'rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.1)', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)' },
+  userBadge: { background: 'var(--gold)', color: '#000', padding: '6px 14px', borderRadius: 999, fontSize: 13, fontWeight: 800, fontFamily: 'var(--font-display)', boxShadow: '0 4px 15px rgba(245,200,66,0.3)' },
   splash: { position: 'fixed', inset: 0, background: '#060608', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 },
   splashLogo: { width: 120, height: 120, animation: 'goldPulse 1.5s infinite' }
 }
