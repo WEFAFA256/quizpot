@@ -9,7 +9,7 @@ export function LoginScreen({ onBack, onLogin }) {
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>WELCOME BACK</h2>
-      <p style={styles.sub}>Login to access your QuizPot wallet</p>
+      <p style={styles.sub}>Securely login to your QuizPot account</p>
       
       <div style={styles.inputGroup}>
         <div style={styles.inputLabel}>PHONE NUMBER</div>
@@ -35,41 +35,52 @@ export function RegisterScreen({ onBack, onRegister }) {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>NEW ACCOUNT</h2>
-      <p style={styles.sub}>Join 10k+ Ugandans winning daily</p>
+      <h2 style={styles.title}>CREATE ACCOUNT</h2>
+      <p style={styles.sub}>Verify yours to start winning</p>
       
       <div style={styles.inputGroup}>
-        <div style={styles.inputLabel}>USERNAME</div>
-        <input style={styles.input} type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="BadmanUG" />
+        <div style={styles.inputLabel}>CHOOSE USERNAME</div>
+        <input style={styles.input} type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="e.g. BadmanUG" />
       </div>
 
       <div style={styles.inputGroup}>
-        <div style={styles.inputLabel}>PHONE NUMBER</div>
+        <div style={styles.inputLabel}>MY PHONE NUMBER</div>
         <input style={styles.input} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="07XXXXXXXX" />
       </div>
 
       <div style={styles.inputGroup}>
-        <div style={styles.inputLabel}>CHOOSE PIN/PASSWORD</div>
+        <div style={styles.inputLabel}>SECURE PASSWORD</div>
         <input style={styles.input} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••" />
       </div>
 
       <div style={styles.inputGroup}>
-        <div style={styles.inputLabel}>SEND VERIFICATION CODE VIA</div>
+        <div style={styles.inputLabel}>SEND OTP CODE TO</div>
         <div style={styles.channelGrid}>
           <button 
             onClick={() => setOtpChannel('telegram')} 
-            style={{ ...styles.channelBtn, borderColor: otpChannel === 'telegram' ? '#0088cc' : 'var(--border)' }}>
-            🔵 TELEGRAM
+            style={{ 
+              ...styles.channelBtn, 
+              borderColor: otpChannel === 'telegram' ? '#0088cc' : 'rgba(255,255,255,0.05)',
+              background: otpChannel === 'telegram' ? 'rgba(0,136,204,0.1)' : 'rgba(255,255,255,0.02)'
+            }}>
+            <img src="/telegram.png" style={styles.channelIcon} onError={(e) => e.target.style.display = 'none'} />
+            <span style={{ color: otpChannel === 'telegram' ? '#0088cc' : 'rgba(255,255,255,0.4)', fontWeight: 800 }}>TELEGRAM</span>
           </button>
+          
           <button 
             onClick={() => setOtpChannel('whatsapp')} 
-            style={{ ...styles.channelBtn, borderColor: otpChannel === 'whatsapp' ? '#25D366' : 'var(--border)' }}>
-            🟢 WHATSAPP
+            style={{ 
+              ...styles.channelBtn, 
+              borderColor: otpChannel === 'whatsapp' ? '#25D366' : 'rgba(255,255,255,0.05)',
+              background: otpChannel === 'whatsapp' ? 'rgba(37,211,102,0.1)' : 'rgba(255,255,255,0.02)'
+            }}>
+            <img src="/whatsapp.png" style={styles.channelIcon} onError={(e) => e.target.style.display = 'none'} />
+            <span style={{ color: otpChannel === 'whatsapp' ? '#25D366' : 'rgba(255,255,255,0.4)', fontWeight: 800 }}>WHATSAPP</span>
           </button>
         </div>
       </div>
 
-      <button onClick={() => onRegister({ username, phone, otpChannel })} style={styles.ctaBtn}>CREATE ACCOUNT</button>
+      <button onClick={() => onRegister({ username, phone, otpChannel })} style={styles.ctaBtn}>JOIN QUIZPOT</button>
       <button onClick={onBack} style={styles.textBtn}>BACK TO HOME</button>
     </div>
   )
@@ -90,27 +101,27 @@ export function DepositScreen({ onBack, onDeposit }) {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>DEPOSIT FUNDS</h2>
-      <p style={styles.sub}>Add money to your QuizPot Wallet</p>
+      <h2 style={styles.title}>ADD FUNDS</h2>
+      <p style={styles.sub}>Deposit to your secure wallet</p>
 
       <div style={styles.inputGroup}>
-        <div style={styles.inputLabel}>AMOUNT (UGX)</div>
+        <div style={styles.inputLabel}>DEPOSIT AMOUNT (UGX)</div>
         <input style={styles.input} type="text" value={amount} onChange={e => setAmount(e.target.value.replace(/\D/g,'').toLocaleString())} placeholder="1,000" />
       </div>
 
       <div style={styles.inputGroup}>
-        <div style={styles.inputLabel}>SELECT OPERATOR</div>
+        <div style={styles.inputLabel}>CHOOSE OPERATOR</div>
         <div style={styles.networkGrid}>
           <button 
             onClick={() => setNetwork('mtn')} 
             style={{
               ...styles.networkBtn, 
-              borderColor: network === 'mtn' ? '#FFCC00' : 'var(--border)',
-              background: network === 'mtn' ? 'rgba(255, 204, 0, 0.1)' : 'var(--surface)'
+              borderColor: network === 'mtn' ? '#FFCC00' : 'rgba(255,255,255,0.05)',
+              background: network === 'mtn' ? 'rgba(255, 204, 0, 0.1)' : 'rgba(255,255,255,0.02)'
             }}
           >
             <div style={{ ...styles.networkLogoWrap, background: '#FFCC00' }}>
-              <img src="/mtn.png" alt="MTN" style={styles.logoImg} onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<span style="color:#000; font-weight: 800; font-size: 14px;">MTN</span>'; }} />
+              <img src="/mtn.png" alt="MTN" style={styles.logoImg} onError={(e) => e.target.style.display = 'none'} />
             </div>
           </button>
 
@@ -118,19 +129,19 @@ export function DepositScreen({ onBack, onDeposit }) {
             onClick={() => setNetwork('airtel')} 
             style={{
               ...styles.networkBtn, 
-              borderColor: network === 'airtel' ? '#FF0000' : 'var(--border)',
-              background: network === 'airtel' ? 'rgba(255, 0, 0, 0.1)' : 'var(--surface)'
+              borderColor: network === 'airtel' ? '#FF0000' : 'rgba(255,255,255,0.05)',
+              background: network === 'airtel' ? 'rgba(255, 0, 0, 0.1)' : 'rgba(255,255,255,0.02)'
             }}
           >
             <div style={{ ...styles.networkLogoWrap, background: '#FF0000' }}>
-              <img src="/airtel.png" alt="Airtel" style={styles.logoImg} onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<span style="color:#fff; font-weight: 800; font-size: 14px;">Airtel</span>'; }} />
+              <img src="/airtel.png" alt="Airtel" style={styles.logoImg} onError={(e) => e.target.style.display = 'none'} />
             </div>
           </button>
         </div>
       </div>
 
       <div style={styles.inputGroup}>
-        <div style={styles.inputLabel}>PHONE NUMBER</div>
+        <div style={styles.inputLabel}>PAYMENT PHONE NUMBER</div>
         <input style={styles.input} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="07XXXXXXXX" />
       </div>
 
@@ -139,15 +150,11 @@ export function DepositScreen({ onBack, onDeposit }) {
         disabled={!valid || loading}
         style={{
           ...styles.ctaBtn,
-          background: valid ? (network === 'mtn' ? '#FFCC00' : '#FF0000') : 'rgba(255,255,255,0.1)',
-          color: valid && network === 'mtn' ? '#000' : (valid ? '#fff' : 'var(--text-dim)'),
+          background: valid ? (network === 'mtn' ? '#FFCC00' : '#FF0000') : 'rgba(255,255,255,0.05)',
+          color: valid && network === 'mtn' ? '#000' : (valid ? '#fff' : 'rgba(255,255,255,0.2)'),
         }}
       >
-        {loading ? (
-             <span style={styles.spinner} />
-          ) : (
-             `DEPOSIT VIA ${network ? network.toUpperCase() : '...'}`
-          )}
+        {loading ? <span style={styles.spinner} /> : `CONFIRM DEPOSIT`}
       </button>
       <button onClick={onBack} style={styles.textBtn}>CANCEL</button>
     </div>
@@ -155,21 +162,23 @@ export function DepositScreen({ onBack, onDeposit }) {
 }
 
 const styles = {
-  container: { padding: '80px 24px', display: 'flex', flexDirection: 'column', gap: 24, animation: 'fadeUp 0.5s ease' },
-  title: { fontSize: 32, fontWeight: 900, fontFamily: 'var(--font-display)', color: '#fff' },
-  sub: { fontSize: 13, color: 'var(--text-dim)', marginTop: -12 },
-  inputGroup: { display: 'flex', flexDirection: 'column', gap: 10 },
-  inputLabel: { fontSize: 10, fontWeight: 800, color: 'var(--text-dim)', letterSpacing: 1.5 },
-  input: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '16px 20px', color: '#fff', fontSize: 16, outline: 'none' },
-  channelGrid: { display: 'flex', gap: 10 },
-  channelBtn: { flex: 1, padding: '14px', background: 'rgba(255,255,255,0.02)', border: '2px solid', borderRadius: 16, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' },
+  container: { padding: '80px 24px', display: 'flex', flexDirection: 'column', gap: 28, animation: 'fadeUp 0.5s ease' },
+  title: { fontSize: 36, fontWeight: 900, fontFamily: 'var(--font-display)', color: '#fff', letterSpacing: -0.5 },
+  sub: { fontSize: 13, color: 'var(--text-dim)', marginTop: -16 },
+  inputGroup: { display: 'flex', flexDirection: 'column', gap: 12 },
+  inputLabel: { fontSize: 10, fontWeight: 900, color: 'var(--text-dim)', letterSpacing: 1.5, marginLeft: 4 },
+  input: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '20px 24px', color: '#fff', fontSize: 18, outline: 'none', fontFamily: 'var(--font-display)', fontWeight: 700, letterSpacing: 1 },
   
-  networkGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 },
-  networkBtn: { padding: '12px', borderRadius: '16px', border: '2px solid', display: 'flex', justifyContent: 'center', alignItems: 'center', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer' },
+  channelGrid: { display: 'flex', gap: 12 },
+  channelBtn: { flex: 1, height: '70px', border: '2px solid', borderRadius: 24, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.2s' },
+  channelIcon: { width: 20, height: 20 },
+  
+  networkGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 },
+  networkBtn: { padding: '16px', borderRadius: '24px', border: '2px solid', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s' },
   networkLogoWrap: { width: 44, height: 44, borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   logoImg: { width: '100%', height: '100%', objectFit: 'cover' },
   
-  ctaBtn: { padding: '20px', background: 'var(--gold)', color: '#000', border: 'none', borderRadius: 24, fontWeight: 900, fontSize: 18, cursor: 'pointer', marginTop: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10 },
-  textBtn: { background: 'none', border: 'none', color: 'var(--text-dim)', fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'center' },
-  spinner: { width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' },
+  ctaBtn: { height: '70px', background: 'var(--gold)', color: '#000', border: 'none', borderRadius: 35, fontWeight: 900, fontSize: 18, fontFamily: 'var(--font-display)', letterSpacing: 1, cursor: 'pointer', marginTop: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, boxShadow: '0 10px 30px rgba(0,0,0,0.3)' },
+  textBtn: { background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 800, cursor: 'pointer', textAlign: 'center', letterSpacing: 1 },
+  spinner: { width: 22, height: 22, border: '3px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' },
 }

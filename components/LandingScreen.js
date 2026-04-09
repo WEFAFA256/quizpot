@@ -3,8 +3,9 @@ import { useState } from 'react'
 
 export default function LandingScreen({ onJoin, onLogin }) {
   const [dummyPools] = useState([
-    { name: 'GOLD VIP', stake: 1000, pot: '1.2M', color: '#F5C842' },
-    { name: 'SILVER', stake: 500, pot: '450K', color: '#C0C0C0' },
+    { name: '1,000 UGX POOL', stake: 1000, pot: '1.2M', color: '#F5C842' },
+    { name: '500 UGX POOL', stake: 500, pot: '450K', color: '#C0C0C0' },
+    { name: '200 UGX POOL', stake: 200, pot: '150K', color: '#CD7F32' },
   ])
 
   return (
@@ -12,10 +13,10 @@ export default function LandingScreen({ onJoin, onLogin }) {
       {/* Background Animated Pools */}
       <div style={styles.bgOverlay}>
         {dummyPools.map((p, i) => (
-          <div key={i} style={{ ...styles.bgCard, borderLeft: `4px solid ${p.color}`, animationDelay: `${i * 2}s`, top: `${20 + i * 30}%` }}>
-            <div style={{ color: p.color, fontWeight: 900 }}>{p.name} ENTRY</div>
-            <div style={{ fontSize: 24, fontWeight: 900 }}>POT: {p.pot}</div>
-            <div style={styles.liveTag}><span style={styles.dot} /> LIVE</div>
+          <div key={i} style={{ ...styles.bgCard, borderLeft: `6px solid ${p.color}`, animationDelay: `${i * 3}s`, top: `${15 + i * 25}%` }}>
+            <div style={{ color: p.color, fontWeight: 900, letterSpacing: 1 }}>{p.name} DRAW</div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: '#fff' }}>POT: {p.pot}</div>
+            <div style={styles.liveTag}><span style={styles.dot} /> {Math.floor(Math.random() * 500 + 100)} PLAYERS</div>
           </div>
         ))}
       </div>
@@ -23,12 +24,12 @@ export default function LandingScreen({ onJoin, onLogin }) {
       <div style={styles.content}>
         <div style={styles.heroSection}>
           <h1 style={styles.heroTitle}>QUIZPOT</h1>
-          <p style={styles.heroSub}>The world's first crowd-funded survival trivia. Deposit once, play forever.</p>
+          <p style={styles.heroSub}>Deposit once, play forever. Uganda's #1 daily survival trivia.</p>
         </div>
 
         <div style={styles.actions}>
-          <button onClick={onJoin} style={styles.signUpBtn}>JOIN GAME</button>
-          <button onClick={onLogin} style={styles.loginBtn}>LOGIN</button>
+          <button onClick={onJoin} style={styles.actionBtn}>JOIN GAME</button>
+          <button onClick={onLogin} style={{ ...styles.actionBtn, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}>LOGIN</button>
         </div>
       </div>
     </div>
@@ -36,18 +37,17 @@ export default function LandingScreen({ onJoin, onLogin }) {
 }
 
 const styles = {
-  container: { minHeight: '100vh', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '40px 20px' },
-  bgOverlay: { position: 'absolute', inset: 0, zIndex: 0, opacity: 0.3, pointerEvents: 'none' },
-  bgCard: { position: 'absolute', right: '-50%', width: '80%', padding: '24px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 24, animation: 'floatAcross 12s linear infinite' },
-  liveTag: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, marginTop: 8, color: 'var(--green)' },
-  dot: { width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', boxShadow: '0 0 8px var(--green)' },
+  container: { minHeight: '100vh', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '0 24px', background: 'radial-gradient(circle at center, #101014 0%, #060608 100%)' },
+  bgOverlay: { position: 'absolute', inset: 0, zIndex: 0, opacity: 0.15, pointerEvents: 'none' },
+  bgCard: { position: 'absolute', right: '-60%', width: '90%', padding: '32px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 32, animation: 'floatAcross 15s linear infinite' },
+  liveTag: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, marginTop: 12, color: 'var(--green)', fontFamily: 'var(--font-mono)' },
+  dot: { width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', boxShadow: '0 0 10px var(--green)' },
 
-  content: { position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 40 },
+  content: { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 60, position: 'relative', zIndex: 1 },
   heroSection: { textAlign: 'center' },
-  heroTitle: { fontSize: 64, fontWeight: 900, fontFamily: 'var(--font-display)', letterSpacing: 4, textShadow: '0 0 30px rgba(255,255,255,0.1)' },
-  heroSub: { fontSize: 15, color: 'var(--text-dim)', maxWidth: '280px', margin: '12px auto 0', lineHeight: 1.5 },
+  heroTitle: { fontSize: 80, fontWeight: 900, fontFamily: 'var(--font-display)', letterSpacing: 8, color: '#fff', textShadow: '0 0 40px rgba(255,255,255,0.15)' },
+  heroSub: { fontSize: 16, color: 'var(--text-dim)', maxWidth: '260px', margin: '16px auto 0', lineHeight: 1.6, fontWeight: 500 },
 
-  actions: { display: 'flex', gap: 12 },
-  signUpBtn: { flex: 1.5, padding: '16px', background: 'var(--gold)', color: '#000', border: 'none', borderRadius: 16, fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, cursor: 'pointer', boxShadow: '0 10px 30px rgba(245,200,66,0.2)' },
-  loginBtn: { flex: 1, padding: '16px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }
+  actions: { display: 'flex', gap: 16, width: '100%', maxWidth: '340px' },
+  actionBtn: { flex: 1, height: '64px', borderRadius: '32px', background: 'var(--gold)', color: '#000', border: 'none', fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, letterSpacing: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.2s', boxShadow: '0 10px 30px rgba(245,200,66,0.15)' }
 }
