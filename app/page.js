@@ -17,6 +17,7 @@ const SCREENS = {
 }
 
 export default function Home() {
+  const [appLoading, setAppLoading] = useState(true)
   const [screen, setScreen] = useState(SCREENS.PAYMENT)
   const [pot, setPot] = useState(GAME_CONFIG.INITIAL_POT)
   const [players, setPlayers] = useState(GAME_CONFIG.INITIAL_PLAYERS)
@@ -26,6 +27,14 @@ export default function Home() {
   const [confettiActive, setConfettiActive] = useState(false)
   const [userWinAmount, setUserWinAmount] = useState(null)
   const [payMethod, setPayMethod] = useState(null)
+
+  // Initial Splash Screen
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAppLoading(false)
+    }, 2500) // 2.5 seconds splash
+    return () => clearTimeout(timer)
+  }, [])
 
   // Pot grows live
   useEffect(() => {
@@ -101,45 +110,78 @@ export default function Home() {
       <ParticleBackground />
       <Confetti active={confettiActive} />
 
-      {screen === SCREENS.PAYMENT && (
-        <PaymentScreen onPay={handlePay} />
+      {/* Global Top-Left Header */}
+      {!appLoading && (
+        <div style={globalStyles.topHeader}>
+          <div style={globalStyles.logoWrap}>
+            <img src="/logo.png" alt="QuizPot" style={globalStyles.logoImg} />
+          </div>
+          <span style={globalStyles.headerText}>QUIZPOT<span style={{color: 'var(--gold)'}}>.ug</span></span>
+        </div>
       )}
 
-      {screen === SCREENS.LOBBY && (
-        <LobbyScreen onStart={startGame} pot={pot} players={players} />
+      {/* Splash Screen */}
+      {appLoading && (
+        <div style={globalStyles.splashContainer}>
+          <div style={globalStyles.splashLogoWrap}>
+            <img src="/logo.png" alt="QuizPot Loading" style={globalStyles.splashLogoImg} />
+          </div>
+        </div>
       )}
 
-      {screen === SCREENS.GAME && currentQuestion && (
-        <GameScreen
-          question={currentQuestion}
-          roundNum={currentRound}
-          totalRounds={QUESTIONS.length}
-          playersLeft={players}
-          onCorrect={handleCorrect}
-          onWrong={handleWrong}
-          onTimeout={handleTimeout}
-          onCashOut={handleCashOut}
-        />
-      )}
+      {/* Main App Screens */}
+      <div style={{ opacity: appLoading ? 0 : 1, transition: 'opacity 0.6s ease', pointerEvents: appLoading ? 'none' : 'auto' }}>
+        {screen === SCREENS.PAYMENT && (
+          <PaymentScreen onPay={handlePay} />
+        )}
 
-      {screen === SCREENS.ELIMINATED && (
-        <EliminatedScreen
-          round={eliminatedRound}
-          totalRounds={QUESTIONS.length}
-          playersLeft={players}
-          onPlayAgain={resetGame}
-          onHome={resetGame}
-        />
-      )}
+        {screen === SCREENS.LOBBY && (
+          <LobbyScreen onStart={startGame} pot={pot} players={players} />
+        )}
 
-      {screen === SCREENS.WINNER && (
-        <WinnerScreen
-          pot={userWinAmount || pot}
-          payMethod={payMethod === 'mtn' ? 'MTN MoMo' : 'Airtel Money'}
-          onPlayAgain={resetGame}
-          onHome={resetGame}
-        />
-      )}
+        {screen === SCREENS.GAME && currentQuestion && (
+          <GameScreen
+            question={currentQuestion}
+            roundNum={currentRound}
+            totalRounds={QUESTIONS.length}
+            playersLeft={players}
+            onCorrect={handleCorrect}
+            onWrong={handleWrong}
+            onTimeout={handleTimeout}
+            onCashOut={handleCashOut}
+          />
+        )}
+
+        {screen === SCREENS.ELIMINATED && (
+          <EliminatedScreen
+            round={eliminatedRound}
+            totalRounds={QUESTIONS.length}
+            playersLeft={players}
+            onPlayAgain={resetGame}
+            onHome={resetGame}
+          />
+        )}
+
+        {screen === SCREENS.WINNER && (
+          <WinnerScreen
+            pot={userWinAmount || pot}
+            payMethod={payMethod === 'mtn' ? 'MTN MoMo' : 'Airtel Money'}
+            onPlayAgain={resetGame}
+            onHome={resetGame}
+          />
+        )}
+      </div>
     </>
   )
+}
+
+const globalStyles = {
+  topHeader: { position: 'fixed', top: 20, left: 20, zIndex: 100, display: 'flex', alignItems: 'center', gap: 10, animation: 'fadeUp 0.8s ease' },
+  logoWrap: { width: 44, height: 44, borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.4)', background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.1)' },
+  logoImg: { width: '100%', height: '100%', objectFit: 'cover' },
+  headerText: { fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, letterSpacing: 1, textShadow: '0 2px 10px rgba(0,0,0,0.5)' },
+  
+  splashContainer: { position: 'fixed', inset: 0, zIndex: 9999, background: 'var(--bg)', display: 'flex', justifyContent: 'center', alignItems: 'center' },
+  splashLogoWrap: { width: 140, height: 140, borderRadius: '32px', overflow: 'hidden', boxShadow: '0 20px 50px rgba(245,200,66,0.2)', border: '1px solid rgba(255,255,255,0.1)', animation: 'goldPulse 1.5s infinite, scaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1)' },
+  splashLogoImg: { width: '100%', height: '100%', objectFit: 'cover' }
 }
