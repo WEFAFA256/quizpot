@@ -2,14 +2,22 @@
 import { useState, useEffect } from 'react'
 import ParticleBackground from '../components/ParticleBackground'
 import Confetti from '../components/Confetti'
-import { PaymentScreen } from '../components/AuthScreens'
+import LandingScreen from '../components/LandingScreen'
+import { RegisterScreen, LoginScreen, DepositScreen } from '../components/AuthScreens'
+import { Dashboard } from '../components/Dashboard'
 import LobbyScreen from '../components/LobbyScreen'
 import GameScreen from '../components/GameScreen'
 import { EliminatedScreen, WinnerScreen } from '../components/EndScreens'
+import BackgroundSound from '../components/BackgroundSound'
 import { QUESTIONS, GAME_CONFIG } from '../lib/data'
 
 const SCREENS = {
-  PAYMENT: 'payment',
+  SPLASH: 'splash',
+  LANDING: 'landing',
+  REGISTER: 'register',
+  LOGIN: 'login',
+  DASHBOARD: 'dashboard',
+  DEPOSIT: 'deposit',
   LOBBY: 'lobby',
   GAME: 'game',
   ELIMINATED: 'eliminated',
@@ -17,8 +25,11 @@ const SCREENS = {
 }
 
 export default function Home() {
-  const [appLoading, setAppLoading] = useState(true)
-  const [screen, setScreen] = useState(SCREENS.PAYMENT)
+  const [screen, setScreen] = useState(SCREENS.SPLASH)
+  const [user, setUser] = useState(null)
+  const [balance, setBalance] = useState(0)
+  const [history, setHistory] = useState([])
+  
   const [pot, setPot] = useState(GAME_CONFIG.INITIAL_POT)
   const [players, setPlayers] = useState(GAME_CONFIG.INITIAL_PLAYERS)
   const [currentStake, setCurrentStake] = useState(0)
@@ -26,17 +37,14 @@ export default function Home() {
   const [eliminatedRound, setEliminatedRound] = useState(0)
   const [confettiActive, setConfettiActive] = useState(false)
   const [userWinAmount, setUserWinAmount] = useState(null)
-  const [payMethod, setPayMethod] = useState(null)
 
-  // Initial Splash Screen
+  // Initial Splash
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setAppLoading(false)
-    }, 2500) // 2.5 seconds splash
-    return () => clearTimeout(timer)
+    const t = setTimeout(() => setScreen(SCREENS.LANDING), 2500)
+    return () => clearTimeout(t)
   }, [])
 
-  // Pot grows live
+  // Live Pot
   useEffect(() => {
     const i = setInterval(() => {
       setPot(p => p + Math.floor(Math.random() * 2000 + 500))
@@ -44,18 +52,31 @@ export default function Home() {
     return () => clearInterval(i)
   }, [])
 
-  // Players fluctuate
-  useEffect(() => {
-    const i = setInterval(() => {
-      setPlayers(p => Math.max(800, p + Math.floor(Math.random() * 10 - 3)))
-    }, 5000)
-    return () => clearInterval(i)
-  }, [])
+  const handleRegister = (data) => {
+    setUser(data)
+    setScreen(SCREENS.DASHBOARD)
+  }
 
-  const handlePay = (stake, method) => {
+  const handleLogin = (data) => {
+    setUser({ username: 'Player', ...data })
+    setScreen(SCREENS.DASHBOARD)
+  }
+
+  const handleDeposit = (amount) => {
+    setBalance(b => b + amount)
+    setHistory([{ type: 'Account Deposit', amount, date: new Date().toLocaleDateString() }, ...history])
+    setScreen(SCREENS.DASHBOARD)
+  }
+
+  const handleEnterPool = (stake) => {
+    if (balance < stake) {
+      alert("Insufficient Balance in QuizPot Wallet! Deposit first.")
+      setScreen(SCREENS.DEPOSIT)
+      return
+    }
+    setBalance(b => b - stake)
     setCurrentStake(stake)
-    setPayMethod(method)
-    setPot(p => p + stake)
+    setHistory([{ type: `Pool Entry: ${stake} UGX`, amount: -stake, date: new Date().toLocaleDateString() }, ...history])
     setScreen(SCREENS.LOBBY)
   }
 
@@ -67,40 +88,31 @@ export default function Home() {
   const handleCorrect = (eliminated) => {
     setPlayers(p => Math.max(1, p - eliminated))
     if (currentRound >= QUESTIONS.length) {
-      setConfettiActive(true)
-      setTimeout(() => setConfettiActive(false), 5000)
-      setScreen(SCREENS.WINNER)
+      handleWin(currentStake * 5) // Fixed 5x for win
     } else {
       setCurrentRound(r => r + 1)
     }
   }
 
   const handleCashOut = (amount) => {
-    // Current multiplier calculation from GameScreen is (1 + (roundNum * 0.5)), base amount from GameScreen is hardcoded to 1000 * multiplier
-    // Since GameScreen passes `amount` assuming 1000 base, we need to divide by 1000 and multiply by actual stake
-    const scaledWin = Math.floor(amount * (currentStake / 1000)); 
-    setUserWinAmount(scaledWin)
+    const scaledWin = Math.floor(amount * (currentStake / 1000))
+    handleWin(scaledWin)
+  }
+
+  const handleWin = (amount) => {
+    setBalance(b => b + amount)
+    setUserWinAmount(amount)
+    setHistory([{ type: 'Trivia Win', amount, date: new Date().toLocaleDateString() }, ...history])
     setConfettiActive(true)
     setTimeout(() => setConfettiActive(false), 5000)
     setScreen(SCREENS.WINNER)
-  }
-
-  const handleWrong = () => {
-    setEliminatedRound(currentRound)
-    setScreen(SCREENS.ELIMINATED)
-  }
-
-  const handleTimeout = () => {
-    setEliminatedRound(currentRound)
-    setScreen(SCREENS.ELIMINATED)
   }
 
   const resetGame = () => {
     setCurrentRound(0)
     setEliminatedRound(0)
     setCurrentStake(0)
-    setPlayers(GAME_CONFIG.INITIAL_PLAYERS)
-    setScreen(SCREENS.PAYMENT)
+    setScreen(SCREENS.DASHBOARD)
   }
 
   const currentQuestion = QUESTIONS[Math.min(currentRound - 1, QUESTIONS.length - 1)]
@@ -109,79 +121,87 @@ export default function Home() {
     <>
       <ParticleBackground />
       <Confetti active={confettiActive} />
+      <BackgroundSound />
 
-      {/* Global Top-Left Header */}
-      {!appLoading && (
-        <div style={globalStyles.topHeader}>
-          <div style={globalStyles.logoWrap}>
-            <img src="/logo.png" alt="QuizPot" style={globalStyles.logoImg} />
+      {/* Header UI (Fixed Overlap) */}
+      {screen !== SCREENS.SPLASH && screen !== SCREENS.GAME && (
+        <div style={styles.header}>
+          <div style={styles.logoBlock}>
+            <img src="/logo.png" style={styles.logo} />
+            <span style={styles.logoText}>QUIZPOT</span>
           </div>
-          <span style={globalStyles.headerText}>QUIZPOT<span style={{color: 'var(--gold)'}}>.ug</span></span>
+          {user && (
+            <div style={styles.userBadge}>
+               {user.username} • {balance.toLocaleString()} UGX
+            </div>
+          )}
         </div>
       )}
 
       {/* Splash Screen */}
-      {appLoading && (
-        <div style={globalStyles.splashContainer}>
-          <div style={globalStyles.splashLogoWrap}>
-            <img src="/logo.png" alt="QuizPot Loading" style={globalStyles.splashLogoImg} />
-          </div>
+      {screen === SCREENS.SPLASH && (
+        <div style={styles.splash}>
+          <img src="/logo.png" style={styles.splashLogo} />
         </div>
       )}
 
-      {/* Main App Screens */}
-      <div style={{ opacity: appLoading ? 0 : 1, transition: 'opacity 0.6s ease', pointerEvents: appLoading ? 'none' : 'auto' }}>
-        {screen === SCREENS.PAYMENT && (
-          <PaymentScreen onPay={handlePay} />
+      {/* App Content */}
+      <div style={{ visibility: screen === SCREENS.SPLASH ? 'hidden' : 'visible' }}>
+        {screen === SCREENS.LANDING && (
+          <LandingScreen onJoin={() => setScreen(SCREENS.REGISTER)} onLogin={() => setScreen(SCREENS.LOGIN)} />
+        )}
+
+        {screen === SCREENS.REGISTER && (
+          <RegisterScreen onBack={() => setScreen(SCREENS.LANDING)} onRegister={handleRegister} />
+        )}
+
+        {screen === SCREENS.LOGIN && (
+          <LoginScreen onBack={() => setScreen(SCREENS.LANDING)} onLogin={handleLogin} />
+        )}
+
+        {screen === SCREENS.DASHBOARD && (
+          <Dashboard balance={balance} history={history} onDeposit={() => setScreen(SCREENS.DEPOSIT)} onEnterPool={handleEnterPool} />
+        )}
+
+        {screen === SCREENS.DEPOSIT && (
+          <DepositScreen onBack={() => setScreen(SCREENS.DASHBOARD)} onDeposit={handleDeposit} />
         )}
 
         {screen === SCREENS.LOBBY && (
           <LobbyScreen onStart={startGame} pot={pot} players={players} />
         )}
 
-        {screen === SCREENS.GAME && currentQuestion && (
-          <GameScreen
+        {screen === SCREENS.GAME && (
+           <GameScreen
             question={currentQuestion}
             roundNum={currentRound}
             totalRounds={QUESTIONS.length}
             playersLeft={players}
             onCorrect={handleCorrect}
-            onWrong={handleWrong}
-            onTimeout={handleTimeout}
+            onWrong={() => { setEliminatedRound(currentRound); setScreen(SCREENS.ELIMINATED); }}
+            onTimeout={() => { setEliminatedRound(currentRound); setScreen(SCREENS.ELIMINATED); }}
             onCashOut={handleCashOut}
           />
         )}
 
         {screen === SCREENS.ELIMINATED && (
-          <EliminatedScreen
-            round={eliminatedRound}
-            totalRounds={QUESTIONS.length}
-            playersLeft={players}
-            onPlayAgain={resetGame}
-            onHome={resetGame}
-          />
+          <EliminatedScreen onPlayAgain={resetGame} onHome={resetGame} round={eliminatedRound} playersLeft={players} />
         )}
 
         {screen === SCREENS.WINNER && (
-          <WinnerScreen
-            pot={userWinAmount || pot}
-            payMethod={payMethod === 'mtn' ? 'MTN MoMo' : 'Airtel Money'}
-            onPlayAgain={resetGame}
-            onHome={resetGame}
-          />
+          <WinnerScreen pot={userWinAmount} onPlayAgain={resetGame} onHome={resetGame} payMethod="QUIZPOT WALLET" />
         )}
       </div>
     </>
   )
 }
 
-const globalStyles = {
-  topHeader: { position: 'fixed', top: 20, left: 20, zIndex: 100, display: 'flex', alignItems: 'center', gap: 10, animation: 'fadeUp 0.8s ease' },
-  logoWrap: { width: 44, height: 44, borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.4)', background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.1)' },
-  logoImg: { width: '100%', height: '100%', objectFit: 'cover' },
-  headerText: { fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, letterSpacing: 1, textShadow: '0 2px 10px rgba(0,0,0,0.5)' },
-  
-  splashContainer: { position: 'fixed', inset: 0, zIndex: 9999, background: 'var(--bg)', display: 'flex', justifyContent: 'center', alignItems: 'center' },
-  splashLogoWrap: { width: 140, height: 140, borderRadius: '32px', overflow: 'hidden', boxShadow: '0 20px 50px rgba(245,200,66,0.2)', border: '1px solid rgba(255,255,255,0.1)', animation: 'goldPulse 1.5s infinite, scaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1)' },
-  splashLogoImg: { width: '100%', height: '100%', objectFit: 'cover' }
+const styles = {
+  header: { position: 'absolute', top: 12, left: 16, right: 16, zIndex: 100, display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  logoBlock: { display: 'flex', alignItems: 'center', gap: 10 },
+  logo: { width: 40, height: 40, borderRadius: 10, boxShadow: '0 4px 10px rgba(0,0,0,0.3)' },
+  logoText: { fontSize: 18, fontWeight: 900, fontFamily: 'var(--font-display)', letterSpacing: 0.5 },
+  userBadge: { background: 'rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.1)', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)' },
+  splash: { position: 'fixed', inset: 0, background: '#060608', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 },
+  splashLogo: { width: 120, height: 120, animation: 'goldPulse 1.5s infinite' }
 }
