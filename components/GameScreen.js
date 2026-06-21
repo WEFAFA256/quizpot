@@ -1,34 +1,43 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { GAME_CONFIG } from '../lib/data'
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D']
 const DIFFICULTY_LABELS = ['', 'EASY', 'EASY', 'MEDIUM', 'HARD', 'EXTREME']
 const DIFFICULTY_COLORS = ['', 'var(--green)', 'var(--green)', 'var(--gold)', 'var(--orange)', 'var(--red)']
 
-export default function GameScreen({ question, roundNum, totalRounds, playersLeft, onCorrect, onWrong, onTimeout, onCashOut }) {
-  const [timeLeft, setTimeLeft] = useState(8)
+export default function GameScreen({
+  question, roundNum, totalRounds, playersLeft,
+  currentStake, balance,
+  onCorrect, onWrong, onTimeout, onCashOut, onRevive
+}) {
+  const [timeLeft, setTimeLeft] = useState(GAME_CONFIG.TIME_PER_QUESTION)
   const [selected, setSelected] = useState(null)
   const [revealed, setRevealed] = useState(false)
   const [elimCount, setElimCount] = useState(null)
-  const [phase, setPhase] = useState('playing') // 'playing', 'cashout', 'revive'
-  const [actionTime, setActionTime] = useState(5)
+  const [phase, setPhase] = useState('playing') // 'playing' | 'cashout' | 'revive'
+  const [actionTime, setActionTime] = useState(GAME_CONFIG.ACTION_TIME)
   const timerRef = useRef(null)
   const actionTimerRef = useRef(null)
 
-  const currentMultiplier = (1 + (roundNum * 0.5)).toFixed(1)
-  const currentWinAmount = Math.floor(1000 * currentMultiplier)
+  const currentMultiplier = parseFloat(
+    (GAME_CONFIG.MULTIPLIER_BASE + roundNum * GAME_CONFIG.MULTIPLIER_PER_ROUND).toFixed(1)
+  )
+  const currentWinAmount = Math.floor(currentStake * currentMultiplier)
   const reviveFee = roundNum * 500
+  const canAffordRevive = balance >= reviveFee
 
+  // Reset state on new question
   useEffect(() => {
-    setTimeLeft(8)
+    setTimeLeft(GAME_CONFIG.TIME_PER_QUESTION)
     setSelected(null)
     setRevealed(false)
     setElimCount(null)
     setPhase('playing')
-    setActionTime(5)
+    setActionTime(GAME_CONFIG.ACTION_TIME)
 
-    if (timerRef.current) clearInterval(timerRef.current)
-    if (actionTimerRef.current) clearInterval(actionTimerRef.current)
+    clearInterval(timerRef.current)
+    clearInterval(actionTimerRef.current)
 
     timerRef.current = setInterval(() => {
       setTimeLeft(t => {
@@ -41,27 +50,29 @@ export default function GameScreen({ question, roundNum, totalRounds, playersLef
         return t - 1
       })
     }, 1000)
+
     return () => {
       clearInterval(timerRef.current)
       clearInterval(actionTimerRef.current)
     }
   }, [question])
 
+  // Action timer for cashout / revive phase
   useEffect(() => {
-    if (phase === 'cashout' || phase === 'revive') {
-      setActionTime(5)
-      actionTimerRef.current = setInterval(() => {
-        setActionTime(t => {
-          if (t <= 1) {
-            clearInterval(actionTimerRef.current)
-            if (phase === 'cashout') onCorrect(elimCount || 0)
-            if (phase === 'revive') onWrong()
-            return 0
-          }
-          return t - 1
-        })
-      }, 1000)
-    }
+    if (phase !== 'cashout' && phase !== 'revive') return
+    setActionTime(GAME_CONFIG.ACTION_TIME)
+    actionTimerRef.current = setInterval(() => {
+      setActionTime(t => {
+        if (t <= 1) {
+          clearInterval(actionTimerRef.current)
+          if (phase === 'cashout') onCorrect(elimCount || 0)  // auto-continue if no action
+          if (phase === 'revive') onWrong()                   // auto-eliminated if no action
+          return 0
+        }
+        return t - 1
+      })
+    }, 1000)
+    return () => clearInterval(actionTimerRef.current)
   }, [phase])
 
   const handleSelect = (idx) => {
@@ -71,24 +82,22 @@ export default function GameScreen({ question, roundNum, totalRounds, playersLef
     setRevealed(true)
 
     const correct = idx === question.answer
-    const elim = Math.floor(playersLeft * (0.35 + Math.random() * 0.25))
+    const elim = Math.floor(
+      playersLeft * (GAME_CONFIG.ELIM_MIN_RATE + Math.random() * GAME_CONFIG.ELIM_MAX_RATE)
+    )
     setElimCount(elim)
 
-    if (correct) {
-      setTimeout(() => setPhase('cashout'), 1400)
-    } else {
-      setTimeout(() => setPhase('revive'), 1400)
-    }
+    setTimeout(() => setPhase(correct ? 'cashout' : 'revive'), 1400)
   }
 
   const circumference = 2 * Math.PI * 26
-  const timerStroke = (timeLeft / 8) * circumference
-  const timerColor = timeLeft <= 5 ? 'var(--red)' : timeLeft <= 10 ? 'var(--gold)' : 'var(--green)'
+  const timerStroke = (timeLeft / GAME_CONFIG.TIME_PER_QUESTION) * circumference
+  const timerColor = timeLeft <= 3 ? 'var(--red)' : timeLeft <= 5 ? 'var(--gold)' : 'var(--green)'
   const diffColor = DIFFICULTY_COLORS[question.difficulty]
 
   return (
     <div style={styles.container}>
-      <div style={{ ...styles.bgPulse, opacity: timeLeft <= 5 ? 0.06 : 0 }} />
+      <div style={{ ...styles.bgPulse, opacity: timeLeft <= 3 ? 0.06 : 0 }} />
 
       {/* Top bar */}
       <div style={styles.topBar}>
@@ -97,7 +106,6 @@ export default function GameScreen({ question, roundNum, totalRounds, playersLef
           <span style={styles.roundNum}>{roundNum}/{totalRounds}</span>
         </div>
 
-        {/* Circular timer */}
         <div style={styles.timerWrap}>
           <svg width={64} height={64} style={{ transform: 'rotate(-90deg)' }}>
             <circle cx={32} cy={32} r={26} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={3} />
@@ -105,7 +113,7 @@ export default function GameScreen({ question, roundNum, totalRounds, playersLef
               strokeDasharray={circumference} strokeDashoffset={circumference - timerStroke}
               strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.3s' }} />
           </svg>
-          <div style={{ ...styles.timerNum, color: timerColor, animation: timeLeft <= 5 ? 'goldPulse 0.5s infinite' : 'none' }}>
+          <div style={{ ...styles.timerNum, color: timerColor, animation: timeLeft <= 3 ? 'goldPulse 0.5s infinite' : 'none' }}>
             {timeLeft}
           </div>
         </div>
@@ -141,13 +149,13 @@ export default function GameScreen({ question, roundNum, totalRounds, playersLef
       </div>
 
       {/* Elimination flash */}
-      {revealed && elimCount && (
+      {revealed && elimCount > 0 && (
         <div style={styles.elimFlash}>
           💀 {elimCount.toLocaleString()} players just eliminated!
         </div>
       )}
 
-      {/* Phases */}
+      {/* Playing phase — answer options */}
       {phase === 'playing' && (
         <div style={styles.answers}>
           {question.options.map((opt, i) => {
@@ -176,30 +184,62 @@ export default function GameScreen({ question, roundNum, totalRounds, playersLef
         </div>
       )}
 
+      {/* Cash out phase */}
       {phase === 'cashout' && (
         <div style={styles.decisionCard}>
-          <h2 style={{ ...styles.roundNum, color: 'var(--green)' }}>CORRECT!</h2>
-          <p style={styles.qText}>Current Multiplier: <span style={{color: 'var(--gold)'}}>{currentMultiplier}x</span></p>
+          <h2 style={{ ...styles.decisionTitle, color: 'var(--green)' }}>CORRECT! ✓</h2>
+          <p style={styles.decisionSub}>
+            Current multiplier: <span style={{ color: 'var(--gold)' }}>{currentMultiplier}x</span>
+          </p>
+          <div style={styles.potentialWin}>
+            {currentWinAmount.toLocaleString()} UGX
+          </div>
           <div style={styles.actionTimer}>{actionTime}s</div>
-          <button style={styles.cashOutBtn} onClick={() => { clearInterval(actionTimerRef.current); if(onCashOut) onCashOut(currentWinAmount); }}>
-            CASH OUT UGX {currentWinAmount.toLocaleString()}
+          <button style={styles.cashOutBtn} onClick={() => {
+            clearInterval(actionTimerRef.current)
+            onCashOut(currentMultiplier)
+          }}>
+            CASH OUT
           </button>
-          <button style={styles.riskBtn} onClick={() => { clearInterval(actionTimerRef.current); onCorrect(elimCount || 0); }}>
-            RISK IT (Next Round)
+          <button style={styles.riskBtn} onClick={() => {
+            clearInterval(actionTimerRef.current)
+            onCorrect(elimCount || 0)
+          }}>
+            RISK IT — Next Round →
           </button>
         </div>
       )}
 
+      {/* Revive phase */}
       {phase === 'revive' && (
         <div style={styles.decisionCard}>
-          <h2 style={{ ...styles.roundNum, color: 'var(--red)' }}>WRONG!</h2>
-          <p style={styles.qText}>You are eliminated.</p>
-          <p style={{...styles.qText, fontSize: 15, color: 'var(--text-dim)'}}>Pay to stay in the game?</p>
-          <div style={styles.actionTimer}>{actionTime}s</div>
-          <button style={styles.reviveBtn} onClick={() => { clearInterval(actionTimerRef.current); onCorrect(elimCount || 0); }}>
-            REVIVE (-UGX {reviveFee.toLocaleString()})
-          </button>
-          <button style={styles.riskBtn} onClick={() => { clearInterval(actionTimerRef.current); onWrong(); }}>
+          <h2 style={{ ...styles.decisionTitle, color: 'var(--red)' }}>WRONG! ✗</h2>
+          <p style={styles.decisionSub}>You are eliminated.</p>
+          {canAffordRevive ? (
+            <>
+              <p style={{ ...styles.decisionSub, color: 'var(--gold)', marginTop: 4 }}>
+                Pay {reviveFee.toLocaleString()} UGX to stay in the game?
+              </p>
+              <div style={styles.actionTimer}>{actionTime}s</div>
+              <button style={styles.reviveBtn} onClick={() => {
+                clearInterval(actionTimerRef.current)
+                onRevive(reviveFee)
+              }}>
+                REVIVE (−{reviveFee.toLocaleString()} UGX)
+              </button>
+            </>
+          ) : (
+            <>
+              <p style={{ ...styles.decisionSub, color: 'var(--red)', marginTop: 4 }}>
+                Not enough balance to revive.
+              </p>
+              <div style={styles.actionTimer}>{actionTime}s</div>
+            </>
+          )}
+          <button style={styles.riskBtn} onClick={() => {
+            clearInterval(actionTimerRef.current)
+            onWrong()
+          }}>
             ACCEPT DEFEAT
           </button>
         </div>
@@ -248,9 +288,12 @@ const styles = {
   ansLabel: { width: 32, height: 32, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text-dim)', flexShrink: 0, transition: 'all 0.2s' },
   ansText: { flex: 1, fontSize: 16, fontWeight: 600, textAlign: 'left', color: 'var(--text)', fontFamily: 'var(--font-body)' },
   ansIcon: { fontSize: 18, flexShrink: 0 },
-  decisionCard: { background: 'rgba(20,20,25,0.6)', backdropFilter: 'blur(30px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 40, padding: '32px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16, animation: 'fadeUp 0.4s ease', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' },
-  actionTimer: { fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 900, color: '#fff', margin: '4px 0', textShadow: '0 0 20px rgba(255,255,255,0.5)', animation: 'goldPulse 1s infinite' },
+  decisionCard: { background: 'rgba(20,20,25,0.6)', backdropFilter: 'blur(30px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 40, padding: '32px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 14, animation: 'fadeUp 0.4s ease', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', position: 'relative', zIndex: 1 },
+  decisionTitle: { fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 900, letterSpacing: 2 },
+  decisionSub: { fontSize: 15, color: 'var(--text-dim)' },
+  potentialWin: { fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 900, color: 'var(--gold)', letterSpacing: 1 },
+  actionTimer: { fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 900, color: '#fff', textShadow: '0 0 20px rgba(255,255,255,0.5)', animation: 'goldPulse 1s infinite' },
   cashOutBtn: { padding: '20px', background: 'linear-gradient(135deg, var(--green), #00b37e)', color: '#000', fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 800, border: 'none', borderRadius: 999, cursor: 'pointer', letterSpacing: 1, boxShadow: '0 10px 20px rgba(0,229,160,0.3)' },
-  reviveBtn: { padding: '20px', background: 'linear-gradient(135deg, var(--red), #cc0022)', color: '#fff', fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 800, border: 'none', borderRadius: 999, cursor: 'pointer', letterSpacing: 1, boxShadow: '0 10px 20px rgba(255,59,92,0.3)' },
-  riskBtn: { padding: '16px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-dim)', fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, borderRadius: 999, cursor: 'pointer' },
+  reviveBtn: { padding: '20px', background: 'linear-gradient(135deg, var(--red), #cc0022)', color: '#fff', fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 800, border: 'none', borderRadius: 999, cursor: 'pointer', letterSpacing: 1, boxShadow: '0 10px 20px rgba(255,59,92,0.3)' },
+  riskBtn: { padding: '16px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-dim)', fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, borderRadius: 999, cursor: 'pointer' },
 }

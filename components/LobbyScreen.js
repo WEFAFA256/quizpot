@@ -1,21 +1,22 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { formatUGX } from '../lib/data'
+import { formatUGX, GAME_CONFIG } from '../lib/data'
+
+const JOIN_MSGS = [
+  'Moses K. just joined! 🔥', 'Amina S. entered the game 💪',
+  'Brian O. is ready! ⚡', 'Fatuma M. joined — 1 more soul 😈',
+  'David N. just paid! 🏆', 'Grace A. entered! 💫',
+  'Ivan T. is here! 🎯', 'Lydia K. joined the hunt! 🔮',
+]
 
 export default function LobbyScreen({ onStart, pot, players }) {
-  const [countdown, setCountdown] = useState(8)
+  const [countdown, setCountdown] = useState(GAME_CONFIG.LOBBY_COUNTDOWN)
   const [msgs, setMsgs] = useState([])
-
-  const joinMsgs = [
-    'Moses K. just joined! 🔥', 'Amina S. entered the game 💪',
-    'Brian O. is ready! ⚡', 'Fatuma M. joined — 1 more soul 😈',
-    'David N. just paid! 🏆', 'Grace A. entered! 💫',
-  ]
 
   useEffect(() => {
     const t = setInterval(() => {
       setCountdown(c => {
-        if (c <= 1) { clearInterval(t); onStart(); return 0; }
+        if (c <= 1) { clearInterval(t); onStart(); return 0 }
         return c - 1
       })
     }, 1000)
@@ -24,13 +25,13 @@ export default function LobbyScreen({ onStart, pot, players }) {
 
   useEffect(() => {
     const t = setInterval(() => {
-      setMsgs(m => [joinMsgs[Math.floor(Math.random() * joinMsgs.length)], ...m.slice(0, 3)])
+      setMsgs(m => [JOIN_MSGS[Math.floor(Math.random() * JOIN_MSGS.length)], ...m.slice(0, 3)])
     }, 1800)
     return () => clearInterval(t)
   }, [])
 
   const circumference = 2 * Math.PI * 44
-  const progress = (countdown / 8) * circumference
+  const progress = (countdown / GAME_CONFIG.LOBBY_COUNTDOWN) * circumference
 
   return (
     <div style={styles.container}>
@@ -42,7 +43,6 @@ export default function LobbyScreen({ onStart, pot, players }) {
           <p style={styles.sub}>Prepare yourself. The elimination begins.</p>
         </div>
 
-        {/* Countdown circle */}
         <div style={styles.clockWrap}>
           <svg width={110} height={110} style={{ transform: 'rotate(-90deg)' }}>
             <circle cx={55} cy={55} r={44} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={4} />
@@ -53,7 +53,6 @@ export default function LobbyScreen({ onStart, pot, players }) {
           <div style={styles.clockNum}>{countdown}</div>
         </div>
 
-        {/* Stats */}
         <div style={styles.statsGrid}>
           <div style={styles.stat}>
             <span style={styles.statN}>{players.toLocaleString()}</span>
@@ -65,12 +64,11 @@ export default function LobbyScreen({ onStart, pot, players }) {
           </div>
         </div>
 
-        {/* Live feed */}
         <div style={styles.feed}>
           <p style={styles.feedTitle}>LIVE ACTIVITY</p>
           <div style={styles.feedList}>
             {msgs.map((m, i) => (
-              <div key={i} style={{ ...styles.feedItem, opacity: 1 - i * 0.2, animation: i === 0 ? 'fadeUp 0.3s ease' : 'none' }}>
+              <div key={`${m}-${i}`} style={{ ...styles.feedItem, opacity: 1 - i * 0.2, animation: i === 0 ? 'fadeUp 0.3s ease' : 'none' }}>
                 {m}
               </div>
             ))}
@@ -79,7 +77,7 @@ export default function LobbyScreen({ onStart, pot, players }) {
         </div>
 
         <div style={styles.tip}>
-          💡 <strong>TIP:</strong> Read questions fast. You have only <strong>15 seconds</strong> per round!
+          💡 <strong>TIP:</strong> Read questions fast. You have only <strong>{GAME_CONFIG.TIME_PER_QUESTION} seconds</strong> per round!
         </div>
       </div>
     </div>
